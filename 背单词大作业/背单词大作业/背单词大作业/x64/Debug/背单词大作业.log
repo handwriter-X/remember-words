@@ -1,0 +1,3 @@
+﻿  背单词大作业.cpp
+D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(52,15): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+  背单词大作业.vcxproj -> D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\x64\Debug\背单词大作业.exe
