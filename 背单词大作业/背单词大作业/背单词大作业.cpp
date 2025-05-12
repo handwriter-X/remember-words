@@ -1,7 +1,10 @@
-﻿#include <graphics.h>
+﻿#define WINVER 0x0500
+#define _WIN32_WINNT 0x0500
+#pragma execution_character_set("utf-8")
+#include <windows.h>
+#include <graphics.h>
 #include <conio.h>
 #include <string>
-#include <Windows.h>
 #include <vector>
 #include <cstdlib>
 #include <ctime>
@@ -15,51 +18,79 @@
 using json = nlohmann::json;
 
 // 窗口大小
-const int WINDOW_WIDTH = 800;
+const int WINDOW_WIDTH = 500;
 const int WINDOW_HEIGHT = 600;
 
+// 更新后的颜色定义
 namespace Colors {
-    constexpr COLORREF Background = 0x00FFFFFF;  // 白色 (BBGGRR格式)
-    constexpr COLORREF ButtonNormal = 0x00D3D3D3;  // 淡灰色
-    constexpr COLORREF ButtonHover = 0x00FFC8C8;  // 浅蓝色
-    constexpr COLORREF Text = 0x00000000;  // 黑色
-    constexpr COLORREF Title = 0x00960000;  // 深蓝色 (RGB(0,0,150))
+    constexpr COLORREF Background = 0x00F8F9FA;    // 浅灰色背景
+    constexpr COLORREF Title = 0x002B2D42;    // 深蓝灰色
+    constexpr COLORREF Text = 0x004A4A4A;    // 深灰色
+    constexpr COLORREF ButtonNormal = 0x00E9ECEF;    // 浅灰色按钮
+    constexpr COLORREF ButtonHover = 0x00CED4DA;    // 中灰色悬停
+    constexpr COLORREF ButtonText = 0x00FFFFFF;    // 白色按钮文字
+    constexpr COLORREF CardBg = 0x00FFFFFF;    // 白色卡片
+    constexpr COLORREF Progress = 0x0076C893;    // 绿色进度条
+    constexpr COLORREF Familiar0 = 0x00FF6B6B;    // 珊瑚红
+    constexpr COLORREF Familiar1 = 0x00FFD93D;    // 活力黄
+    constexpr COLORREF Familiar2 = 0x006CBF84;    // 森林绿
+    constexpr COLORREF Subtitle = 0x006C757D;    // 中性灰
 }
 
-
-
-
-
 // 字符串转换函数（提前定义以避免未定义错误）
-std::wstring ansiToWstring(const std::string& str);
 std::wstring utf8ToWstring(const std::string& str);
 
-// 按钮基类
+// 修改后的按钮基类（增加圆角半径和文本颜色参数）
 class Button {
 protected:
     int x, y, width, height;
-    std::string text;
+    std::string text; // 保留原始字符串
+    std::wstring wtext; // 缓存宽字符版本
     bool isHovered;
-    COLORREF normalColor, hoverColor;
+    COLORREF normalColor, hoverColor, textColor;
+    int radius;
 
 public:
+    // 构造函数重载 - 接受窄字符字符串
     Button(int x, int y, int width, int height, const std::string& text,
         COLORREF normalColor = Colors::ButtonNormal,
-        COLORREF hoverColor = Colors::ButtonHover)
+        COLORREF hoverColor = Colors::ButtonHover,
+        COLORREF textColor = Colors::ButtonText,
+        int radius = 8)
         : x(x), y(y), width(width), height(height), text(text),
-        isHovered(false), normalColor(normalColor), hoverColor(hoverColor) {}
+        wtext(utf8ToWstring(text)), // 立即转换为宽字符
+        isHovered(false), normalColor(normalColor),
+        hoverColor(hoverColor), textColor(textColor),
+        radius(radius) {}
+
+    // 构造函数重载 - 接受宽字符字符串
+    Button(int x, int y, int width, int height, const std::wstring& wtext,
+        COLORREF normalColor = Colors::ButtonNormal,
+        COLORREF hoverColor = Colors::ButtonHover,
+        COLORREF textColor = Colors::ButtonText,
+        int radius = 8)
+        : x(x), y(y), width(width), height(height), wtext(wtext),
+        isHovered(false), normalColor(normalColor),
+        hoverColor(hoverColor), textColor(textColor),
+        radius(radius) {}
 
     virtual void draw() {
+        // 使用圆角参数绘制按钮
         setfillcolor(isHovered ? hoverColor : normalColor);
-        fillrectangle(x, y, x + width, y + height);
+        fillroundrect(x, y, x + width, y + height, radius, radius);
 
-        settextcolor(Colors::Text);
-        settextstyle(24, 0, _T("微软雅黑"));
+        // 设置字体样式
+        settextstyle(16, 0, _T("微软雅黑"));
+        setbkmode(TRANSPARENT); // 设置背景透明
 
-        std::wstring wtext = ansiToWstring(text);
-        int textX = x + (width - wtext.length() * 12) / 2;
-        int textY = y + (height - 24) / 2;
+        // 绘制文字
+        int textWidth = textwidth(wtext.c_str());
+        int textHeight = textheight(wtext.c_str());
+        int textX = x + (width - textWidth) / 2;
+        int textY = y + (height - textHeight) / 2;
 
+        // 确保文本颜色可见
+        settextcolor(textColor);
         outtextxy(textX, textY, wtext.c_str());
     }
 
@@ -92,32 +123,21 @@ std::random_device rd;
 std::mt19937 gen(rd());
 
 // 字符串转换函数实现
-std::wstring ansiToWstring(const std::string& str) {
-    int len;
-    int slength = static_cast<int>(str.length()) + 1;
-    len = MultiByteToWideChar(CP_ACP, 0, str.c_str(), slength, 0, 0);
-    wchar_t* buf = new wchar_t[len];
-    MultiByteToWideChar(CP_ACP, 0, str.c_str(), slength, buf, len);
-    std::wstring r(buf);
-    delete[] buf;
-    return r;
-}
-
 std::wstring utf8ToWstring(const std::string& str) {
-    int len;
-    int slength = static_cast<int>(str.length()) + 1;
-    len = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), slength, 0, 0);
-    wchar_t* buf = new wchar_t[len];
-    MultiByteToWideChar(CP_UTF8, 0, str.c_str(), slength, buf, len);
-    std::wstring r(buf);
-    delete[] buf;
-    return r;
+    if (str.empty()) return L"";
+
+    int len = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, nullptr, 0);
+    if (len == 0) return L"";
+
+    std::wstring wstr(len, L'\0');
+    MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, &wstr[0], len);
+
+    return wstr;
 }
 
 // 从JSON文件加载单词库
 bool loadWordLibraryFromJSON() {
     try {
-        // 以二进制模式打开文件以避免编码转换问题
         std::ifstream file("words.json", std::ios::binary);
         if (!file.is_open()) {
             throw std::runtime_error("无法打开 words.json 文件");
@@ -141,7 +161,6 @@ bool loadWordLibraryFromJSON() {
                 word.meaning = "暂无翻译";
             }
 
-            // 检查是否有熟悉度信息
             if (item.contains("familiarity")) {
                 word.familiarity = item["familiarity"].get<int>();
                 if (word.familiarity > 0) {
@@ -185,10 +204,9 @@ int getRandomLearnedWord() {
         return -1; // 没有已学习的单词
     }
 
-    // 根据熟悉度进行加权随机选择，熟悉度越低越容易被选中
     std::vector<int> weightedPool;
     for (int idx : learnedWords) {
-        int weight = 3 - wordLibrary[idx].familiarity; // 熟悉度0的单词权重为3，熟悉度2的单词权重为1
+        int weight = 3 - wordLibrary[idx].familiarity; // 熟悉度越低权重越高
         for (int i = 0; i < weight; i++) {
             weightedPool.push_back(idx);
         }
@@ -202,17 +220,11 @@ int getRandomLearnedWord() {
 void updateWordStatus(int wordIndex, int newFamiliarity) {
     Word& word = wordLibrary[wordIndex];
 
-    // 记录之前的学习状态
     bool wasLearned = word.learned;
-
-    // 更新熟悉度
     word.familiarity = newFamiliarity;
 
-    // 更新学习状态
     if (newFamiliarity > 0) {
         word.learned = true;
-
-        // 如果之前未学习，将其从未学习列表移至已学习列表
         if (!wasLearned) {
             auto it = std::find(unlearnedWords.begin(), unlearnedWords.end(), wordIndex);
             if (it != unlearnedWords.end()) {
@@ -223,8 +235,6 @@ void updateWordStatus(int wordIndex, int newFamiliarity) {
     }
     else {
         word.learned = false;
-
-        // 如果之前已学习，将其从已学习列表移至未学习列表
         if (wasLearned) {
             auto it = std::find(learnedWords.begin(), learnedWords.end(), wordIndex);
             if (it != learnedWords.end()) {
@@ -235,7 +245,8 @@ void updateWordStatus(int wordIndex, int newFamiliarity) {
     }
 }
 
-// 主界面类
+// 修改后的主菜单界面
+// 修改后的主菜单界面
 class MainMenu {
 private:
     Button* btnLearnNew;
@@ -244,12 +255,15 @@ private:
 
 public:
     MainMenu() {
-        int btnWidth = 200;
-        int btnHeight = 60;
+        int btnWidth = 280;  // 加宽按钮
+        int btnHeight = 80;  // 增加高度
         int centerX = (WINDOW_WIDTH - btnWidth) / 2;
 
-        btnLearnNew = new Button(centerX, 200, btnWidth, btnHeight, "学习新词");
-        btnReview = new Button(centerX, 300, btnWidth, btnHeight, "复习单词");
+        // 垂直排列按钮，增加间距
+        btnLearnNew = new Button(centerX, 320, btnWidth, btnHeight, "学习新词", 
+            Colors::Familiar2, Colors::Familiar1, WHITE, 15);
+        btnReview = new Button(centerX, 420, btnWidth, btnHeight, "复习单词",
+            Colors::Familiar1, Colors::Familiar0, WHITE, 15);
 
         updateStatusText();
     }
@@ -274,13 +288,20 @@ public:
         // 绘制标题
         settextcolor(Colors::Title);
         settextstyle(48, 0, _T("微软雅黑"));
-        std::wstring title = L"单词学习助手";
-        int titleX = (WINDOW_WIDTH - title.length() * 24) / 2;
-        outtextxy(titleX, 50, title.c_str());
+        std::wstring title = L"词汇大师";
+        int titleWidth = textwidth(title.c_str());
+        outtextxy((WINDOW_WIDTH - titleWidth)/2, 80, title.c_str());
+
+        // 绘制副标题
+        settextcolor(Colors::Subtitle);
+        settextstyle(24, 0, _T("微软雅黑"));
+        std::wstring subtitle = L"每日进步一点点";
+        int subtitleWidth = textwidth(subtitle.c_str());
+        outtextxy((WINDOW_WIDTH - subtitleWidth)/2, 150, subtitle.c_str());
 
         // 绘制状态文本
         settextcolor(Colors::Text);
-        settextstyle(16, 0, _T("微软雅黑"));
+        settextstyle(18, 0, _T("微软雅黑"));
         outtextxy(50, WINDOW_HEIGHT - 30, statusText.c_str());
 
         // 绘制按钮
@@ -304,7 +325,7 @@ public:
     }
 };
 
-// 单词学习界面类
+// 修改后的单词学习界面
 class WordLearningScreen {
 private:
     Button* btnBack;
@@ -319,12 +340,23 @@ private:
 
 public:
     WordLearningScreen(bool reviewMode = false) : isReviewMode(reviewMode) {
-        btnBack = new Button(100, 500, 120, 50, "返回");
-        btnNext = new Button(580, 500, 120, 50, "下一个");
+        // 创建返回和下一个按钮
+        btnBack = new Button(50, 500, 120, 50, "返回", 
+            Colors::ButtonNormal, Colors::ButtonHover, WHITE, 8);
+        btnNext = new Button(330, 500, 120, 50, "下一个", 
+            Colors::ButtonNormal, Colors::ButtonHover, WHITE, 8);
 
-        btnFamiliarity0 = new Button(250, 400, 100, 40, "不熟悉", RGB(255, 200, 200), RGB(255, 150, 150));
-        btnFamiliarity1 = new Button(370, 400, 100, 40, "一般", RGB(200, 200, 255), RGB(150, 150, 255));
-        btnFamiliarity2 = new Button(490, 400, 100, 40, "熟悉", RGB(200, 255, 200), RGB(150, 255, 150));
+        // 创建熟悉度按钮
+        int btnWidth = 160;
+        int btnHeight = 60;
+        int startX = (WINDOW_WIDTH - btnWidth*3 - 40)/2;
+
+        btnFamiliarity0 = new Button(startX, 400, btnWidth, btnHeight, "不熟悉",
+            Colors::Familiar0, RGB(255, 100, 100), WHITE, 10);
+        btnFamiliarity1 = new Button(startX + btnWidth + 20, 400, btnWidth, btnHeight, "一般",
+            Colors::Familiar1, RGB(255, 180, 50), WHITE, 10);
+        btnFamiliarity2 = new Button(startX + btnWidth*2 + 40, 400, btnWidth, btnHeight, "熟悉",
+            Colors::Familiar2, RGB(100, 200, 100), WHITE, 10);
 
         // 初始化当前单词
         if (isReviewMode) {
@@ -350,28 +382,37 @@ public:
         cleardevice();
 
         // 绘制状态文本
-        settextcolor(Colors::Text);
-        settextstyle(16, 0, _T("微软雅黑"));
+        settextcolor(Colors::Title);
+        settextstyle(24, 0, _T("微软雅黑"));
         outtextxy(50, 30, statusText.c_str());
 
         if (currentWordIndex >= 0 && currentWordIndex < wordLibrary.size()) {
             Word& word = wordLibrary[currentWordIndex];
 
+            // 绘制卡片背景
+            setfillcolor(Colors::CardBg);
+            fillroundrect(100, 120, WINDOW_WIDTH - 100, 340, 20, 20);
+
+            // 绘制装饰线
+            setlinecolor(0xE9ECEF);
+            setlinestyle(PS_SOLID, 3);
+            line(100, 460, WINDOW_WIDTH - 100, 460);
+
             // 绘制单词
             settextcolor(Colors::Title);
-            settextstyle(48, 0, _T("微软雅黑"));
+            settextstyle(64, 0, _T("微软雅黑"));
             std::wstring wWord = utf8ToWstring(word.word);
-            int wordX = (WINDOW_WIDTH - wWord.length() * 24) / 2;
-            outtextxy(wordX, 120, wWord.c_str());
+            int wordWidth = textwidth(wWord.c_str());
+            int wordX = (WINDOW_WIDTH - wordWidth) / 2;
+            outtextxy(wordX, 140, wWord.c_str());
 
             // 绘制释义
             settextcolor(Colors::Text);
-            settextstyle(28, 0, _T("微软雅黑"));
+            settextstyle(24, 0, _T("微软雅黑"));
             std::wstring wMeaning = utf8ToWstring(word.meaning);
-            int len = static_cast<int>(wMeaning.length());
-            int displayLen = (len > 30) ? 30 : len;
-            int meaningX = (WINDOW_WIDTH - displayLen * 14) / 2;
-            outtextxy(meaningX, 200, wMeaning.c_str());
+            int meaningWidth = textwidth(wMeaning.c_str());
+            int meaningX = (WINDOW_WIDTH - meaningWidth) / 2;
+            outtextxy(meaningX, 240, wMeaning.c_str());
 
             // 绘制熟悉度按钮
             btnFamiliarity0->draw();
@@ -383,8 +424,8 @@ public:
             settextcolor(Colors::Text);
             settextstyle(28, 0, _T("微软雅黑"));
             std::wstring message = isReviewMode ? L"没有需要复习的单词" : L"没有新单词可学习";
-            int msgX = (WINDOW_WIDTH - message.length() * 14) / 2;
-            outtextxy(msgX, 200, message.c_str());
+            int msgWidth = textwidth(message.c_str());
+            outtextxy((WINDOW_WIDTH - msgWidth)/2, 200, message.c_str());
         }
 
         // 绘制返回和下一个按钮
@@ -419,11 +460,9 @@ public:
                 updateWordStatus(currentWordIndex, 2);
             }
 
-            // 更新主菜单状态文本
             mainMenu->updateStatusText();
         }
 
-        // 切换到下一个单词
         if (btnNext->isClicked(mx, my)) {
             if (isReviewMode) {
                 currentWordIndex = getRandomLearnedWord();
@@ -437,15 +476,10 @@ public:
     }
 };
 
-// ...前面的头文件和定义保持不变...
-
 int main() {
-    // 初始化随机数生成器
-    std::srand(static_cast<unsigned int>(std::time(nullptr)));
-
+    SetConsoleOutputCP(65001);
     // 尝试加载单词库
     if (!loadWordLibraryFromJSON()) {
-        // 如果加载失败，创建一个简单的示例单词库
         std::cout << "使用示例单词库..." << std::endl;
 
         Word w1; w1.word = "apple"; w1.meaning = "苹果";
@@ -456,14 +490,14 @@ int main() {
 
         wordLibrary = { w1, w2, w3, w4, w5 };
 
-        // 初始化未学习单词列表
         for (size_t i = 0; i < wordLibrary.size(); i++) {
             unlearnedWords.push_back(i);
         }
     }
+
     // 初始化图形窗口
     initgraph(WINDOW_WIDTH, WINDOW_HEIGHT);
-    BeginBatchDraw();  // 启用双缓冲
+    BeginBatchDraw();
 
     // 创建界面对象
     MainMenu mainMenu;
@@ -473,11 +507,9 @@ int main() {
     bool running = true;
 
     while (running) {
-        // 处理消息
         if (MouseHit()) {
             MOUSEMSG msg = GetMouseMsg();
 
-            // 处理点击事件
             if (msg.uMsg == WM_LBUTTONDOWN) {
                 if (currentScreen == 0) { // 主菜单
                     int action = mainMenu.handleClick(msg.x, msg.y);
@@ -499,10 +531,9 @@ int main() {
             }
         }
 
-        // 开始绘制
+        // 绘制当前界面
         cleardevice();
 
-        // 绘制当前界面
         if (currentScreen == 0) {
             mainMenu.draw();
         }
@@ -510,9 +541,8 @@ int main() {
             if (currentLearningScreen) currentLearningScreen->draw();
         }
 
-        // 提交绘制
         FlushBatchDraw();
-        Sleep(10);  // 降低CPU占用
+        Sleep(10);
     }
 
     // 清理资源
