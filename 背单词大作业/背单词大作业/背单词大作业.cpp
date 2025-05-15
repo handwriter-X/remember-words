@@ -18,8 +18,8 @@
 using json = nlohmann::json;
 
 // 窗口大小
-const int WINDOW_WIDTH = 500;
-const int WINDOW_HEIGHT = 600;
+const int WINDOW_WIDTH = 570;
+const int WINDOW_HEIGHT = 650;
 
 // 更新后的颜色定义
 namespace Colors {
@@ -34,7 +34,8 @@ namespace Colors {
     constexpr COLORREF Familiar0 = 0x00FF6B6B;    // 珊瑚红
     constexpr COLORREF Familiar1 = 0x00FFD93D;    // 活力黄
     constexpr COLORREF Familiar2 = 0x006CBF84;    // 森林绿
-    constexpr COLORREF Subtitle = 0x006C757D;    // 中性灰
+    constexpr COLORREF Subtitle = 0x006C757D;  // 中性灰
+    constexpr COLORREF addColor = 0x90EE90;   //薄荷绿
 }
 
 // 字符串转换函数（提前定义以避免未定义错误）
@@ -80,7 +81,7 @@ public:
         fillroundrect(x, y, x + width, y + height, radius, radius);
 
         // 设置字体样式
-        settextstyle(16, 0, _T("微软雅黑"));
+        settextstyle(33, 0, _T("微软雅黑"));
         setbkmode(TRANSPARENT); // 设置背景透明
 
         // 绘制文字
@@ -107,7 +108,7 @@ public:
 struct Word {
     std::string word;
     std::string meaning;
-    int familiarity; // 熟悉度: 0-不熟悉, 1-一般, 2-熟悉
+    int familiarity; // 熟悉度: 0-不熟悉, 1-一般, 2-熟悉，3-非常熟悉
     bool learned;    // 是否已学习
 
     Word() : familiarity(0), learned(false) {}
@@ -161,18 +162,17 @@ bool loadWordLibraryFromJSON() {
                 word.meaning = "暂无翻译";
             }
 
-            if (item.contains("familiarity")) {
-                word.familiarity = item["familiarity"].get<int>();
-                if (word.familiarity > 0) {
-                    word.learned = true;
-                    learnedWords.push_back(wordLibrary.size());
-                }
-                else {
-                    unlearnedWords.push_back(wordLibrary.size());
-                }
-            }
-            else {
+            // 修复熟悉度判断逻辑
+            word.familiarity = item.contains("familiarity") ? item["familiarity"].get<int>() : 0;
+
+            // 分类单词
+            if (word.familiarity == 0) {
+                word.learned = false;
                 unlearnedWords.push_back(wordLibrary.size());
+            }
+            else if (0 < word.familiarity <= 3) {
+                word.learned = true;
+                learnedWords.push_back(wordLibrary.size());
             }
 
             wordLibrary.push_back(word);
@@ -204,8 +204,21 @@ int getRandomLearnedWord() {
         return -1; // 没有已学习的单词
     }
 
-    std::vector<int> weightedPool;
+    // 过滤掉熟悉度为3的单词
+    std::vector<int> validWords;
     for (int idx : learnedWords) {
+        if (wordLibrary[idx].familiarity < 3) {
+            validWords.push_back(idx);
+        }
+    }
+
+    if (validWords.empty()) {
+        return -1; // 没有需要复习的单词
+    }
+
+    // 按熟悉度加权随机选择
+    std::vector<int> weightedPool;
+    for (int idx : validWords) {
         int weight = 3 - wordLibrary[idx].familiarity; // 熟悉度越低权重越高
         for (int i = 0; i < weight; i++) {
             weightedPool.push_back(idx);
@@ -218,34 +231,39 @@ int getRandomLearnedWord() {
 
 // 更新单词学习状态
 void updateWordStatus(int wordIndex, int newFamiliarity) {
-    Word& word = wordLibrary[wordIndex];
+    if (wordIndex < 0 || wordIndex >= wordLibrary.size()) {
+        return;
+    }
 
+    Word& word = wordLibrary[wordIndex];
     bool wasLearned = word.learned;
     word.familiarity = newFamiliarity;
 
-    if (newFamiliarity > 0) {
+    // 从现有列表中移除
+    auto it_un = std::find(unlearnedWords.begin(), unlearnedWords.end(), wordIndex);
+    if (it_un != unlearnedWords.end()) {
+        unlearnedWords.erase(it_un);
+    }
+
+    auto it_l = std::find(learnedWords.begin(), learnedWords.end(), wordIndex);
+    if (it_l != learnedWords.end()) {
+        learnedWords.erase(it_l);
+    }
+
+    // 根据新的熟悉度重新分类
+    if (newFamiliarity == 0) {
+        word.learned = false;
+        unlearnedWords.push_back(wordIndex);
+    }
+    else if (newFamiliarity < 3) {
         word.learned = true;
-        if (!wasLearned) {
-            auto it = std::find(unlearnedWords.begin(), unlearnedWords.end(), wordIndex);
-            if (it != unlearnedWords.end()) {
-                unlearnedWords.erase(it);
-                learnedWords.push_back(wordIndex);
-            }
-        }
+        learnedWords.push_back(wordIndex);
     }
     else {
-        word.learned = false;
-        if (wasLearned) {
-            auto it = std::find(learnedWords.begin(), learnedWords.end(), wordIndex);
-            if (it != learnedWords.end()) {
-                learnedWords.erase(it);
-                unlearnedWords.push_back(wordIndex);
-            }
-        }
+        word.learned = false; // 非常熟悉的单词不加入任何列表
     }
 }
 
-// 修改后的主菜单界面
 // 修改后的主菜单界面
 class MainMenu {
 private:
@@ -260,7 +278,7 @@ public:
         int centerX = (WINDOW_WIDTH - btnWidth) / 2;
 
         // 垂直排列按钮，增加间距
-        btnLearnNew = new Button(centerX, 320, btnWidth, btnHeight, "学习新词", 
+        btnLearnNew = new Button(centerX, 320, btnWidth, btnHeight, "学习新词",
             Colors::Familiar2, Colors::Familiar1, WHITE, 15);
         btnReview = new Button(centerX, 420, btnWidth, btnHeight, "复习单词",
             Colors::Familiar1, Colors::Familiar0, WHITE, 15);
@@ -276,7 +294,7 @@ public:
     void updateStatusText() {
         std::wstringstream ss;
         ss << L"单词总数: " << wordLibrary.size()
-            << L"   已学习: " << learnedWords.size()
+            << L"   待复习: " << learnedWords.size()
             << L"   未学习: " << unlearnedWords.size();
         statusText = ss.str();
     }
@@ -290,14 +308,14 @@ public:
         settextstyle(48, 0, _T("微软雅黑"));
         std::wstring title = L"词汇大师";
         int titleWidth = textwidth(title.c_str());
-        outtextxy((WINDOW_WIDTH - titleWidth)/2, 80, title.c_str());
+        outtextxy((WINDOW_WIDTH - titleWidth) / 2, 80, title.c_str());
 
         // 绘制副标题
         settextcolor(Colors::Subtitle);
         settextstyle(24, 0, _T("微软雅黑"));
         std::wstring subtitle = L"每日进步一点点";
         int subtitleWidth = textwidth(subtitle.c_str());
-        outtextxy((WINDOW_WIDTH - subtitleWidth)/2, 150, subtitle.c_str());
+        outtextxy((WINDOW_WIDTH - subtitleWidth) / 2, 150, subtitle.c_str());
 
         // 绘制状态文本
         settextcolor(Colors::Text);
@@ -333,6 +351,7 @@ private:
     Button* btnFamiliarity0;
     Button* btnFamiliarity1;
     Button* btnFamiliarity2;
+    Button* btnFamiliarity3; // "非常熟悉"按钮
 
     int currentWordIndex;
     bool isReviewMode;
@@ -341,32 +360,27 @@ private:
 public:
     WordLearningScreen(bool reviewMode = false) : isReviewMode(reviewMode) {
         // 创建返回和下一个按钮
-        btnBack = new Button(50, 500, 120, 50, "返回", 
-            Colors::ButtonNormal, Colors::ButtonHover, WHITE, 8);
-        btnNext = new Button(330, 500, 120, 50, "下一个", 
-            Colors::ButtonNormal, Colors::ButtonHover, WHITE, 8);
+        btnBack = new Button(110, 500, 120, 50, "返回",
+            Colors::addColor, Colors::ButtonHover, WHITE, 8);
+        btnNext = new Button(340, 500, 120, 50, "下一个",
+            Colors::addColor, Colors::ButtonHover, WHITE, 8);
 
         // 创建熟悉度按钮
-        int btnWidth = 160;
+        int btnWidth = 120;
         int btnHeight = 60;
-        int startX = (WINDOW_WIDTH - btnWidth*3 - 40)/2;
+        int startX = (WINDOW_WIDTH - btnWidth * 4 - 60) / 2;
 
         btnFamiliarity0 = new Button(startX, 400, btnWidth, btnHeight, "不熟悉",
             Colors::Familiar0, RGB(255, 100, 100), WHITE, 10);
         btnFamiliarity1 = new Button(startX + btnWidth + 20, 400, btnWidth, btnHeight, "一般",
             Colors::Familiar1, RGB(255, 180, 50), WHITE, 10);
-        btnFamiliarity2 = new Button(startX + btnWidth*2 + 40, 400, btnWidth, btnHeight, "熟悉",
+        btnFamiliarity2 = new Button(startX + btnWidth * 2 + 40, 400, btnWidth, btnHeight, "熟悉",
             Colors::Familiar2, RGB(100, 200, 100), WHITE, 10);
+        btnFamiliarity3 = new Button(startX + btnWidth * 3 + 60, 400, btnWidth, btnHeight, "非常熟悉",
+            Colors::Familiar2, RGB(50, 180, 50), WHITE, 10);
 
         // 初始化当前单词
-        if (isReviewMode) {
-            currentWordIndex = getRandomLearnedWord();
-            statusText = L"复习模式";
-        }
-        else {
-            currentWordIndex = getRandomUnlearnedWord();
-            statusText = L"学习模式";
-        }
+        reloadCurrentWord();
     }
 
     ~WordLearningScreen() {
@@ -375,6 +389,19 @@ public:
         delete btnFamiliarity0;
         delete btnFamiliarity1;
         delete btnFamiliarity2;
+        delete btnFamiliarity3;
+    }
+
+    // 重新加载当前单词
+    void reloadCurrentWord() {
+        if (isReviewMode) {
+            currentWordIndex = getRandomLearnedWord();
+            statusText = L"复习模式";
+        }
+        else {
+            currentWordIndex = getRandomUnlearnedWord();
+            statusText = L"学习模式";
+        }
     }
 
     void draw() {
@@ -418,6 +445,7 @@ public:
             btnFamiliarity0->draw();
             btnFamiliarity1->draw();
             btnFamiliarity2->draw();
+            btnFamiliarity3->draw();
         }
         else {
             // 没有可用单词的提示
@@ -425,7 +453,7 @@ public:
             settextstyle(28, 0, _T("微软雅黑"));
             std::wstring message = isReviewMode ? L"没有需要复习的单词" : L"没有新单词可学习";
             int msgWidth = textwidth(message.c_str());
-            outtextxy((WINDOW_WIDTH - msgWidth)/2, 200, message.c_str());
+            outtextxy((WINDOW_WIDTH - msgWidth) / 2, 200, message.c_str());
         }
 
         // 绘制返回和下一个按钮
@@ -441,6 +469,7 @@ public:
             btnFamiliarity0->checkHover(mx, my);
             btnFamiliarity1->checkHover(mx, my);
             btnFamiliarity2->checkHover(mx, my);
+            btnFamiliarity3->checkHover(mx, my);
         }
     }
 
@@ -459,17 +488,15 @@ public:
             else if (btnFamiliarity2->isClicked(mx, my)) {
                 updateWordStatus(currentWordIndex, 2);
             }
+            else if (btnFamiliarity3->isClicked(mx, my)) {
+                updateWordStatus(currentWordIndex, 3);
+            }
 
+            // 更新主菜单状态
             mainMenu->updateStatusText();
-        }
 
-        if (btnNext->isClicked(mx, my)) {
-            if (isReviewMode) {
-                currentWordIndex = getRandomLearnedWord();
-            }
-            else {
-                currentWordIndex = getRandomUnlearnedWord();
-            }
+            // 加载下一个单词
+            reloadCurrentWord();
         }
 
         return 1; // 继续在当前界面
@@ -490,7 +517,12 @@ int main() {
 
         wordLibrary = { w1, w2, w3, w4, w5 };
 
+        // 初始化单词状态
+        unlearnedWords.clear();
+        learnedWords.clear();
         for (size_t i = 0; i < wordLibrary.size(); i++) {
+            wordLibrary[i].familiarity = 0;
+            wordLibrary[i].learned = false;
             unlearnedWords.push_back(i);
         }
     }
@@ -527,6 +559,19 @@ int main() {
                 else { // 学习/复习界面
                     int result = currentLearningScreen->handleClick(msg.x, msg.y, &mainMenu);
                     if (result == 0) currentScreen = 0;
+                }
+            }
+        }
+
+        // 鼠标悬停检测
+        if (MouseHit()) {
+            MOUSEMSG msg = GetMouseMsg();
+            if (msg.uMsg == WM_MOUSEMOVE) {
+                if (currentScreen == 0) {
+                    mainMenu.checkHover(msg.x, msg.y);
+                }
+                else {
+                    currentLearningScreen->checkHover(msg.x, msg.y);
                 }
             }
         }

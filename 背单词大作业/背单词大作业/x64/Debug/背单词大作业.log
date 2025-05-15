@@ -1,32 +1,28 @@
 ﻿  背单词大作业.cpp
-D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(168,60): warning C4267: “参数”: 从“size_t”转换到“_Ty”，可能丢失数据
-D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(168,60): warning C4267:         with
-D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(168,60): warning C4267:         [
-D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(168,60): warning C4267:             _Ty=int
-D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(168,60): warning C4267:         ]
-D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(171,62): warning C4267: “参数”: 从“size_t”转换到“_Ty”，可能丢失数据
-D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(171,62): warning C4267:         with
-D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(171,62): warning C4267:         [
-D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(171,62): warning C4267:             _Ty=int
-D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(171,62): warning C4267:         ]
-D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(175,58): warning C4267: “参数”: 从“size_t”转换到“_Ty”，可能丢失数据
-D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(175,58): warning C4267:         with
-D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(175,58): warning C4267:         [
-D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(175,58): warning C4267:             _Ty=int
-D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(175,58): warning C4267:         ]
+D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(171,58): warning C4267: “参数”: 从“size_t”转换到“_Ty”，可能丢失数据
+D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(171,58): warning C4267:         with
+D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(171,58): warning C4267:         [
+D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(171,58): warning C4267:             _Ty=int
+D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(171,58): warning C4267:         ]
+D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(173,24): warning C4804: “<=”: 在操作中使用类型“bool”不安全
+D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(175,56): warning C4267: “参数”: 从“size_t”转换到“_Ty”，可能丢失数据
+D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(175,56): warning C4267:         with
+D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(175,56): warning C4267:         [
+D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(175,56): warning C4267:             _Ty=int
+D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(175,56): warning C4267:         ]
 D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(197,66): warning C4267: “参数”: 从“size_t”转换到“_Ty”，可能丢失数据
 D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(197,66): warning C4267:         with
 D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(197,66): warning C4267:         [
 D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(197,66): warning C4267:             _Ty=int
 D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(197,66): warning C4267:         ]
-D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(215,64): warning C4267: “参数”: 从“size_t”转换到“_Ty”，可能丢失数据
-D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(215,64): warning C4267:         with
-D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(215,64): warning C4267:         [
-D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(215,64): warning C4267:             _Ty=int
-D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(215,64): warning C4267:         ]
-D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(494,38): warning C4267: “参数”: 从“size_t”转换到“_Ty”，可能丢失数据
-D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(494,38): warning C4267:         with
-D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(494,38): warning C4267:         [
-D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(494,38): warning C4267:             _Ty=int
-D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(494,38): warning C4267:         ]
+D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(228,64): warning C4267: “参数”: 从“size_t”转换到“_Ty”，可能丢失数据
+D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(228,64): warning C4267:         with
+D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(228,64): warning C4267:         [
+D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(228,64): warning C4267:             _Ty=int
+D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(228,64): warning C4267:         ]
+D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(526,38): warning C4267: “参数”: 从“size_t”转换到“_Ty”，可能丢失数据
+D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(526,38): warning C4267:         with
+D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(526,38): warning C4267:         [
+D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(526,38): warning C4267:             _Ty=int
+D:\X\learning\C++\C++\repos\背单词大作业\背单词大作业\背单词大作业.cpp(526,38): warning C4267:         ]
   背单词大作业.vcxproj -> D:\X\learning\C++\C++\repos\背单词大作业\x64\Debug\背单词大作业.exe
